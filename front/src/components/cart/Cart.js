@@ -1,117 +1,96 @@
-import React, { Fragment, useState} from 'react'
+import React, { Fragment } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
+import { addItemToCart, removeItemFromCart } from '../../actions/cartActions'
 import MetaData from '../layout/MetaData'
 
 
 const Cart = () => {
-    const [quantity, setQuantity] = useState(1)
+    const dispatch = useDispatch();
+    const { cartItems } = useSelector(state => state.cart)
 
-    const increaseQty = () => {
-        const contador = document.querySelector('.count')
-        const qty = contador.valueAsNumber+1;
-        setQuantity(qty)
-     }
+    const increaseQty = (id, quantity, inventario) => {
+        const newQty = quantity + 1;
+        if (newQty > inventario) return;
+        dispatch(addItemToCart(id, newQty))
+    }
 
-     const decreaseQty = () => {
-      const contador = document.querySelector('.count')
+    const decreaseQty = (id, quantity) => {
+        const newQty = quantity - 1;
+        if (newQty <= 0) return;
+        dispatch(addItemToCart(id, newQty))
+    }
 
-      const qty = contador.valueAsNumber-1;
-      setQuantity(qty)
-   }
-
-    //Json de ejemplo
-   let cartItems=[
-        {
-            "_id": "63513206109735e58d94addd",
-            "nombre": "cuadro Ciervo Rojo",
-            "precio": 690000,
-            "imagen": "./images/animales/ciervo_rojo.webp",
-            "inventario": 40,
-        },
-        {
-            "_id": "63513298109735e58d94ade0",
-            "nombre": "Cuadro Tigre",
-            "precio": 230000,
-            "imagen": "./images/animales/tigre.webp",
-            "inventario": 120,
-        },
-        {
-            "_id": "635132ea109735e58d94ade3",
-            "nombre": "Retreto de Bisonte",
-            "precio": 180000,
-            "imagen": "./images/animales/bisonte.webp",
-            "inventario": 20,
-        }
-    ]
-
-cartItems = Array.from(cartItems);
+    const removeCartItemHandler = (id) => {
+        dispatch(removeItemFromCart(id))
+    }
 
     return (
         <Fragment>
-            <MetaData title={'Your Cart'} />
+            <MetaData title={'Mi carrito'} />
 
 
             {cartItems.length === 0 ? <h2 className="mt-5">Su carrito esta vacio</h2> : (
                 <Fragment>
                     <div id='container_carrito'>
-                    <h2 className="mt-5">Su Carrito: <b>{cartItems.length} items</b></h2>
+                        <h2 className="mt-5">Su Carrito: <b > {cartItems.reduce((acc, item) => (acc + Number(item.quantity)), 0)} items</b></h2>
 
-                    <div className="row d-flex justify-content-between">
-                        <div className="col-12 col-lg-8">
+                        <div className="row d-flex justify-content-between">
+                            <div className="col-12 col-lg-8">
 
-                        {cartItems && cartItems.map (item => (
-                                <Fragment>
-                                    <hr />
+                                {cartItems && cartItems.map(item => (
+                                    <Fragment>
+                                        <hr />
 
-                                    <div className="cart-item" key={item.nombre}>
-                                        <div className="row">
-                                            <div className="col-4 col-lg-3">
-                                                <img src={item.imagen} alt={item.nombre} height="90" width="115"  />
-                                            </div>
-
-                                            <div className="col-5 col-lg-3">
-                                                <Link to={`/producto/${item._id}`}>{item.nombre}</Link>
-                                            </div>
-
-
-                                            <div className="col-4 col-lg-2 mt-4 mt-lg-0">
-                                                <p id="card_item_price">${item.precio}</p>
-                                            </div>
-
-                                            <div className="col-4 col-lg-3 mt-4 mt-lg-0">
-                                                <div className="stockCounter d-inline">
-                                                    <span className="btn btn-danger minus" onClick={decreaseQty}>-</span>
-
-                                                    <input type="number" className="form-control count d-inline" value={quantity} readOnly />
-
-                                                    <span className="btn btn-primary plus" onClick={increaseQty}>+</span>
+                                        <div className="cart-item" key={item.nombre}>
+                                            <div className="row">
+                                                <div className="col-4 col-lg-3">
+                                                    <img src={item.imagen} alt={item.nombre} height="90" width="115" />
                                                 </div>
-                                            </div>
 
-                                            <div className="col-4 col-lg-1 mt-4 mt-lg-0">
-                                                <i id="delete_cart_item" className="fa fa-trash btn btn-danger" ></i>
-                                            </div>
+                                                <div className="col-5 col-lg-3">
+                                                    <Link to={`/producto/${item.product}`}>{item.nombre}</Link>
+                                                </div>
 
+
+                                                <div className="col-4 col-lg-2 mt-4 mt-lg-0">
+                                                    <p id="card_item_price" style={{color: "#0142B4"}}>${item.precio}</p>
+                                                </div>
+
+                                                <div className="col-4 col-lg-3 mt-4 mt-lg-0">
+                                                    <div className="stockCounter d-inline">
+                                                        <span className="btn btn-secondary plus" onClick={() => decreaseQty(item.product, item.quantity)}>-</span>
+
+                                                        <input type="number" className="form-control count d-inline" value={item.quantity} readOnly />
+
+                                                        <span className="btn btn-success minus" onClick={() => increaseQty(item.product, item.quantity, item.inventario)}>+</span>
+                                                    </div>
+                                                </div>
+
+                                                <div className="col-4 col-lg-1 mt-4 mt-lg-0">
+                                                    <i id="delete_cart_item" className="fa fa-trash btn btn-danger" onClick={() => removeCartItemHandler(item.product)}></i>
+                                                </div>
+
+                                            </div>
                                         </div>
-                                    </div>
-                                    <hr />
-                                </Fragment>
+                                        <hr />
+                                    </Fragment>
 
-                        ))}
-                        </div>
-
-                        <div className="col-12 col-lg-3 my-4">
-                            <div id="order_summary">
-                                <h4>Total de la Compra</h4>
-                                <hr />
-                                <p>Subtotal:  <span className="order-summary-values">$350.000</span></p>
-                                <p>Est. total: <span className="order-summary-values">$380.000</span></p>
-
-                                <hr />
-                                <button id="checkout_btn" className="btn btn-primary btn-block">Comprar!</button>
+                                ))}
                             </div>
-                        </div>
-                    </div></div>
+
+                            <div className="col-12 col-lg-3 my-4">
+                                <div id="order_summary">
+                                    <h4>Total de la Compra</h4>
+                                    <hr />
+                                    <p>Productos:  <span className="order-summary-values">{cartItems.reduce((acc, item) => (acc + Number(item.quantity)), 0)} (Unidades)</span></p>
+                                    <p>Est. total: <span className="order-summary-values">${cartItems.reduce((acc, item) => acc + (item.quantity * item.precio), 0).toFixed(2)}</span></p>
+
+                                    <hr />
+                                    <button id="carrito_btn" className="btn btn-outline-dark btn-block">Comprar!</button>
+                                </div>
+                            </div>
+                        </div></div>
                 </Fragment>
             )}
         </Fragment>
